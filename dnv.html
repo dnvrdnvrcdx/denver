@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>For Dainne</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    user-select: none;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #000;
+    font-family: Arial, sans-serif;
+}
+
+canvas {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="c"></canvas>
+
+<script>
+
+const canvas = document.getElementById("c");
+const ctx = canvas.getContext("2d");
+
+let W, H, CX, CY, SCALE;
+
+const DPR = Math.min(window.devicePixelRatio || 1, 2);
+
+
+
+const text = "I love you";
+
+const points = [];
+
+const TOTAL = 95;
+
+
+const lyrics = [
+
+    {
+        text: "You’ll always be the",
+        duration: 1500
+    },
+
+    {
+        text: "person I choose to",
+        duration: 1500
+    },
+
+    {
+        text: "love the most, not",
+        duration: 1500
+    },
+
+    {
+        text: "just for now, but",
+        duration: 1500
+    },
+
+    {
+        text: "for as long as",
+        duration: 1500
+    },
+
+    {
+        text: "my heart knows how",
+        duration: 1500
+    },
+
+    {
+        text: "to love.",
+        duration: 2000
+    },
+
+
+    {
+        text: "I want you to",
+        duration: 1500
+    },
+
+    {
+        text: "be the one I",
+        duration: 1500
+    },
+
+    {
+        text: "keep choosing, today,",
+        duration: 1500
+    },
+
+    {
+        text: "tomorrow, and forever.",
+        duration: 2500
+    },
+
+
+    {
+        text: "iloveyousomuch, bebi:)",
+        duration: 3500
+    },
+
+
+
+    {
+        text: "from : Denver\n to : Dainne my baby",
+        duration: 10000
+    }
+];
+
+
+let lyricIndex = 0;
+
+let lyricStart = performance.now();
+
+let currentLyric =
+    lyrics[0].text;
+
+let lyricAlpha = 1;
+
+
+function resize() {
+
+    W = window.innerWidth;
+
+    H = window.innerHeight;
+
+    canvas.width =
+        W * DPR;
+
+    canvas.height =
+        H * DPR;
+
+    canvas.style.width =
+        W + "px";
+
+    canvas.style.height =
+        H + "px";
+
+    ctx.setTransform(
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+    );
+
+    ctx.scale(
+        DPR,
+        DPR
+    );
+
+    CX =
+        W / 2;
+
+    CY =
+        H / 2 + 20;
+
+    SCALE =
+        Math.min(W, H) * 0.014;
+
+    buildPoints();
+}
+
+function heart(t) {
+
+    const x =
+        16 *
+        Math.pow(
+            Math.sin(t),
+            3
+        );
+
+    const y =
+        13 * Math.cos(t)
+        - 5 * Math.cos(2 * t)
+        - 2 * Math.cos(3 * t)
+        - Math.cos(4 * t);
+
+    return {
+
+        x: x * SCALE,
+
+        y: -y * SCALE
+    };
+}
+
+
+function buildPoints() {
+
+    points.length = 0;
+
+    for (
+        let i = 0;
+        i < TOTAL;
+        i++
+    ) {
+
+        const t =
+            (i / TOTAL) *
+            Math.PI *
+            2;
+
+        points.push({
+
+            baseT: t,
+
+            phase:
+                Math.random() *
+                Math.PI *
+                2
+        });
+    }
+}
+
+function glowText(
+    txt,
+    x,
+    y,
+    angle,
+    size,
+    alpha = 1
+) {
+
+    ctx.save();
+
+    ctx.translate(
+        x,
+        y
+    );
+
+    ctx.rotate(
+        angle
+    );
+
+    ctx.font =
+        `bold ${size}px Arial, sans-serif`;
+
+    ctx.textAlign =
+        "center";
+
+    ctx.textBaseline =
+        "middle";
+
+    ctx.shadowColor =
+        "rgba(255, 120, 190, 0.95)";
+
+    ctx.shadowBlur =
+        15;
+
+    ctx.fillStyle =
+        `rgba(255, 190, 225, ${alpha})`;
+
+    ctx.fillText(
+        txt,
+        0,
+        0
+    );
+
+    ctx.restore();
+}
+
+function drawCenterLyric() {
+
+    /*
+       Slightly smaller on phones
+    */
+
+    let size =
+        Math.min(W, H) * 0.055;
+
+
+    /*
+       Make the long final message
+       fit inside the heart.
+    */
+
+    if (
+        currentLyric.includes("Dainne")
+    ) {
+
+        size =
+            Math.min(W, H) * 0.045;
+    }
+
+
+    /*
+       Split lines using \n
+    */
+
+    const lines =
+        currentLyric.split("\n");
+
+
+    const lineHeight =
+        size * 1.35;
+
+
+    ctx.save();
+
+    ctx.font =
+        `bold ${size}px Arial, sans-serif`;
+
+    ctx.textAlign =
+        "center";
+
+    ctx.textBaseline =
+        "middle";
+
+
+    /*
+       Center the entire group
+    */
+
+    lines.forEach(
+        (line, index) => {
+
+            const y =
+                CY +
+                (
+                    index -
+                    (lines.length - 1) / 2
+                ) *
+                lineHeight;
+
+            ctx.shadowColor =
+                "rgba(255, 150, 210, 1)";
+
+            ctx.shadowBlur =
+                20;
+
+            ctx.fillStyle =
+                `rgba(
+                    255,
+                    255,
+                    255,
+                    ${lyricAlpha}
+                )`;
+
+            ctx.fillText(
+                line.trim(),
+                CX,
+                y
+            );
+        }
+    );
+
+    ctx.restore();
+}
+
+
+function updateLyrics(time) {
+
+    const elapsed =
+        time - lyricStart;
+
+
+    const duration =
+        lyrics[
+            lyricIndex
+        ].duration;
+
+
+    if (
+        elapsed >= duration
+    ) {
+
+        lyricIndex =
+            (
+                lyricIndex + 1
+            ) %
+            lyrics.length;
+
+
+        currentLyric =
+            lyrics[
+                lyricIndex
+            ].text;
+
+
+        lyricStart =
+            time;
+
+
+        /*
+           Start new lyric faded out
+        */
+
+        lyricAlpha = 0;
+    }
+
+
+    /*
+       Smooth fade in
+    */
+
+    if (
+        lyricAlpha < 1
+    ) {
+
+        lyricAlpha += 0.06;
+
+        if (
+            lyricAlpha > 1
+        ) {
+
+            lyricAlpha = 1;
+        }
+    }
+}
+
+
+function drawHeart(time) {
+
+    const pulse =
+        1 +
+        Math.sin(
+            time * 0.002
+        ) *
+        0.035;
+
+
+    points.forEach(
+        (p) => {
+
+            const pos =
+                heart(
+                    p.baseT
+                );
+
+
+            const floatX =
+                Math.sin(
+                    time * 0.0015 +
+                    p.phase
+                ) *
+                2;
+
+
+            const floatY =
+                Math.cos(
+                    time * 0.0012 +
+                    p.phase
+                ) *
+                2;
+
+
+            const x =
+                CX +
+                pos.x * pulse +
+                floatX;
+
+
+            const y =
+                CY +
+                pos.y * pulse +
+                floatY;
+
+
+            const angle =
+                p.baseT +
+                Math.PI / 2;
+
+
+            const alpha =
+                0.65 +
+                Math.sin(
+                    time * 0.003 +
+                    p.phase
+                ) *
+                0.35;
+
+
+            const size =
+                Math.max(
+                    8,
+                    Math.min(
+                        W,
+                        H
+                    ) * 0.025
+                );
+
+
+            /*
+               The heart ALWAYS says
+               "I love you"
+            */
+
+            glowText(
+                text,
+                x,
+                y,
+                angle,
+                size,
+                alpha
+            );
+        }
+    );
+}
+
+
+function animate(time) {
+
+    ctx.clearRect(
+        0,
+        0,
+        W,
+        H
+    );
+
+
+    updateLyrics(
+        time
+    );
+
+
+    drawHeart(
+        time
+    );
+
+
+    /*
+       Center lyric goes LAST
+       so it's always visible.
+    */
+
+    drawCenterLyric();
+
+
+    requestAnimationFrame(
+        animate
+    );
+}
+
+window.addEventListener(
+    "resize",
+    resize
+);
+
+resize();
+
+requestAnimationFrame(
+    animate
+);
+
+</script>
+
+</body>
+</html>
