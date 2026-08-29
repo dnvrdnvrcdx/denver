@@ -2,13 +2,17 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+
 <meta name="viewport"
-      content="width=device-width, initial-scale=1.0,
-               maximum-scale=1.0, user-scalable=no">
+      content="width=device-width,
+               initial-scale=1.0,
+               maximum-scale=1.0,
+               user-scalable=no">
 
 <title>RetroLens Engine</title>
 
 <style>
+
 * {
     box-sizing: border-box;
 }
@@ -23,93 +27,137 @@ body {
     font-family: Arial, sans-serif;
 }
 
-#app {
+#video {
     position: fixed;
-    inset: 0;
-    background: #000;
+
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+
+    transform: scaleX(-1);
+
+    display: none;
 }
 
 #canvas {
-    position: absolute;
-    inset: 0;
+    position: fixed;
+
+    left: 0;
+    top: 0;
+
     width: 100%;
     height: 100%;
-    object-fit: contain;
-}
 
-#video {
-    display: none;
+    object-fit: contain;
+
+    background: #000;
 }
 
 #startScreen {
+
     position: fixed;
+
     inset: 0;
-    z-index: 20;
+
+    z-index: 10;
 
     display: flex;
-    align-items: center;
-    justify-content: center;
+
     flex-direction: column;
 
-    background:
-        radial-gradient(circle at center,
-        #171717 0%,
-        #050505 45%,
-        #000 100%);
+    justify-content: center;
+
+    align-items: center;
+
+    text-align: center;
 
     color: white;
-    text-align: center;
+
+    background:
+        radial-gradient(
+            circle,
+            #171717,
+            #000
+        );
 }
 
 #startScreen h1 {
-    margin: 0 0 8px;
 
-    font-size: clamp(38px, 8vw, 72px);
+    margin: 0 0 10px;
+
+    font-size: clamp(
+        40px,
+        8vw,
+        72px
+    );
+
     letter-spacing: 5px;
+
 }
 
 #startScreen p {
-    margin: 0 0 25px;
+
     color: #999;
+
+    margin-bottom: 25px;
+
 }
 
 button {
-    padding: 14px 26px;
+
+    padding: 14px 28px;
 
     border: 1px solid #00ffff;
-    border-radius: 5px;
+
+    border-radius: 6px;
 
     background: transparent;
+
     color: #00ffff;
 
     font-size: 16px;
+
     cursor: pointer;
+
 }
 
 button:hover {
+
     background: #00ffff;
+
     color: #000;
+
 }
 
 button:disabled {
+
     opacity: 0.5;
+
 }
 
 #status {
+
     margin-top: 15px;
-    color: #777;
+
+    color: #888;
+
     font-size: 13px;
+
 }
 
 #error {
-    max-width: 600px;
-    margin-top: 15px;
-    color: #ff5555;
-    display: none;
-}
 
-#loading {
     display: none;
+
+    max-width: 500px;
+
+    margin-top: 15px;
+
+    padding: 10px;
+
+    color: #ff5555;
+
 }
 
 </style>
@@ -117,58 +165,45 @@ button:disabled {
 
 <body>
 
-<div id="app">
+<!-- CAMERA -->
 
-    <video id="video"
-           autoplay
-           muted
-           playsinline></video>
+<video
+    id="video"
+    autoplay
+    muted
+    playsinline>
+</video>
 
-    <canvas id="canvas"></canvas>
 
-    <div id="startScreen">
+<!-- PROCESSING CANVAS -->
 
-        <h1>RETROLENS</h1>
+<canvas id="canvas"></canvas>
 
-        <p>
-            Hand-controlled visual portal engine
-        </p>
 
-        <button id="startButton">
-            START CAMERA
-        </button>
+<!-- START SCREEN -->
 
-        <div id="status">
-            Camera offline
-        </div>
+<div id="startScreen">
 
-        <div id="loading">
-            Loading hand tracking...
-        </div>
+    <h1>RETROLENS</h1>
 
-        <div id="error"></div>
+    <p>
+        Hand-controlled visual portal engine
+    </p>
 
+    <button id="startButton">
+        START CAMERA
+    </button>
+
+    <div id="status">
+        Camera offline
     </div>
+
+    <div id="error"></div>
 
 </div>
 
 
 <script type="module">
-
-/*
-============================================================
-RETROLENS V2
-Optimized browser version
-
-Major changes:
-- Lower-resolution processing buffer
-- Hand detection throttled
-- Camera rendering separated from detection
-- Filters only process portal regions
-- No full-frame pixel filter every frame
-- GPU-friendly canvas operations
-============================================================
-*/
 
 
 /* =========================================================
@@ -176,9 +211,14 @@ Major changes:
 ========================================================= */
 
 import {
+
     HandLandmarker,
+
     FilesetResolver
-} from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/+esm";
+
+}
+from
+"https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/+esm";
 
 
 /* =========================================================
@@ -186,155 +226,87 @@ import {
 ========================================================= */
 
 const video =
-    document.getElementById("video");
+    document.getElementById(
+        "video"
+    );
 
 const canvas =
-    document.getElementById("canvas");
+    document.getElementById(
+        "canvas"
+    );
 
 const ctx =
-    canvas.getContext("2d", {
-        alpha: false,
-        desynchronized: true
-    });
+    canvas.getContext(
+        "2d",
+        {
+            alpha: false
+        }
+    );
 
 const startScreen =
-    document.getElementById("startScreen");
+    document.getElementById(
+        "startScreen"
+    );
 
 const startButton =
-    document.getElementById("startButton");
+    document.getElementById(
+        "startButton"
+    );
 
-const statusText =
-    document.getElementById("status");
+const status =
+    document.getElementById(
+        "status"
+    );
 
-const loadingText =
-    document.getElementById("loading");
-
-const errorText =
-    document.getElementById("error");
+const errorBox =
+    document.getElementById(
+        "error"
+    );
 
 
 /* =========================================================
-   PROCESSING RESOLUTION
+   RESOLUTION
 ========================================================= */
 
 /*
-    The display can still be large.
-
-    Processing is deliberately smaller because
-    hand tracking does not need 960x540.
+    640x360 is MUCH easier for an i3-7th gen
+    while still looking good on the webpage.
 */
 
-const PROCESS_WIDTH = 640;
-const PROCESS_HEIGHT = 360;
+const WIDTH = 640;
 
-
-/* =========================================================
-   CANVAS
-========================================================= */
+const HEIGHT = 360;
 
 canvas.width =
-    PROCESS_WIDTH;
+    WIDTH;
 
 canvas.height =
-    PROCESS_HEIGHT;
-
-
-/* =========================================================
-   OFFSCREEN CANVASES
-========================================================= */
-
-const frameCanvas =
-    document.createElement("canvas");
-
-frameCanvas.width =
-    PROCESS_WIDTH;
-
-frameCanvas.height =
-    PROCESS_HEIGHT;
-
-const frameCtx =
-    frameCanvas.getContext("2d", {
-        alpha: false
-    });
-
-
-const portalCanvas =
-    document.createElement("canvas");
-
-const portalCtx =
-    portalCanvas.getContext("2d");
-
-
-/* =========================================================
-   SETTINGS
-========================================================= */
-
-const PINCH_THRESHOLD =
-    0.07;
-
-const FIST_THRESHOLD =
-    0.135;
-
-const FILTER_COOLDOWN =
-    350;
-
-const MODE_COOLDOWN =
-    1200;
-
-
-/*
-    Hand detection frequency.
-
-    10 FPS is enough for gesture recognition
-    while greatly reducing CPU usage.
-*/
-
-const HAND_INTERVAL =
-    100;
+    HEIGHT;
 
 
 /* =========================================================
    STATE
 ========================================================= */
 
-let handLandmarker =
-    null;
+let stream = null;
 
-let cameraStream =
-    null;
+let running = false;
 
-let running =
-    false;
+let handLandmarker = null;
 
-let handDetectionBusy =
-    false;
+let hands = [];
 
-let lastHandDetection =
-    0;
+let lastDetection = 0;
 
-let lastFilterChange =
-    0;
+let detecting = false;
 
-let lastModeChange =
-    0;
+let lastModeChange = 0;
 
-let activeFilter =
-    0;
+let lastFilterChange = 0;
 
-let mode3D =
-    false;
+let mode3D = false;
 
-let detectedHands =
-    [];
-
-let fps =
-    0;
-
-let lastFrameTime =
-    performance.now();
-
-let frameCounter =
-    0;
+let filterIndex = 0;
 
 
 /* =========================================================
@@ -344,15 +316,25 @@ let frameCounter =
 const filters = [
 
     "dual-tone",
+
     "thermal",
+
     "sketch",
+
     "pixelate",
+
     "glitch",
+
     "invert",
+
     "red-channel",
+
     "edge",
+
     "blur",
+
     "cartoon",
+
     "rainbow-wave"
 
 ];
@@ -360,19 +342,23 @@ const filters = [
 
 function currentFilter() {
 
-    return filters[activeFilter];
+    return filters[
+        filterIndex
+    ];
 
 }
 
 
-function nextFilter(amount = 1) {
+function nextFilter(amount) {
 
-    activeFilter =
+    filterIndex =
+
         (
-            activeFilter +
+            filterIndex +
             amount +
             filters.length
-        ) %
+        )
+        %
         filters.length;
 
 }
@@ -389,105 +375,111 @@ async function startCamera() {
         startButton.disabled =
             true;
 
-        statusText.textContent =
-            "Starting camera...";
+        status.textContent =
+            "Requesting camera...";
 
 
-        cameraStream =
-            await navigator.mediaDevices.getUserMedia({
+        /*
+            IMPORTANT:
 
-                video: {
+            Keep getUserMedia simple.
 
-                    width: {
-                        ideal: 640
+            This works better across
+            Chrome + Safari + iPhone.
+        */
+
+        stream =
+            await navigator.mediaDevices
+                .getUserMedia({
+
+                    video: {
+
+                        facingMode:
+                            "user"
+
                     },
 
-                    height: {
-                        ideal: 360
-                    },
+                    audio: false
 
-                    frameRate: {
-                        ideal: 30,
-                        max: 30
-                    },
-
-                    facingMode: "user"
-
-                },
-
-                audio: false
-
-            });
+                });
 
 
         video.srcObject =
-            cameraStream;
+            stream;
+
+
+        /*
+            Wait for the actual
+            video metadata.
+        */
+
+        await new Promise(
+            resolve => {
+
+                if (
+                    video.readyState >= 2
+                ) {
+
+                    resolve();
+
+                } else {
+
+                    video.onloadedmetadata =
+                        resolve;
+
+                }
+
+            }
+        );
 
 
         await video.play();
 
 
-        statusText.textContent =
-            "Camera ready";
-
-
         /*
-            Show camera immediately.
+            Camera is now working.
         */
 
-        running =
-            true;
+        running = true;
 
         startScreen.style.display =
             "none";
 
 
+        /*
+            Start rendering immediately.
+        */
+
         requestAnimationFrame(
-            renderLoop
+            render
         );
 
 
         /*
-            Load MediaPipe AFTER camera starts.
+            Load hand tracking
+            AFTER camera starts.
         */
 
-        loadingText.style.display =
-            "block";
-
-        statusText.textContent =
-            "Loading hand tracking...";
+        loadHands();
 
 
-        await loadHandTracking();
+    } catch (err) {
 
-
-        loadingText.style.display =
-            "none";
-
-
-        statusText.textContent =
-            "Hand tracking ready";
-
-
-    } catch (error) {
-
-        console.error(error);
-
-        running =
-            false;
+        console.error(err);
 
         startButton.disabled =
             false;
 
-        loadingText.style.display =
-            "none";
+        status.textContent =
+            "Camera offline";
 
-        errorText.style.display =
+        errorBox.style.display =
             "block";
 
-        errorText.textContent =
-            error.message ||
-            "Unable to start camera.";
+        errorBox.textContent =
+            err.name +
+            ": " +
+            err.message;
 
     }
 
@@ -498,60 +490,83 @@ async function startCamera() {
    MEDIAPIPE
 ========================================================= */
 
-async function loadHandTracking() {
+async function loadHands() {
 
-    const vision =
-        await FilesetResolver.forVisionTasks(
+    try {
 
-            "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/wasm"
+        status.textContent =
+            "Loading hand tracking...";
 
+
+        const vision =
+            await FilesetResolver
+                .forVisionTasks(
+
+                    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/wasm"
+
+                );
+
+
+        handLandmarker =
+            await HandLandmarker
+                .createFromOptions(
+
+                    vision,
+
+                    {
+
+                        baseOptions: {
+
+                            modelAssetPath:
+
+                                "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
+
+                            delegate:
+                                "GPU"
+
+                        },
+
+                        runningMode:
+                            "VIDEO",
+
+                        numHands:
+                            2,
+
+                        minHandDetectionConfidence:
+                            0.65,
+
+                        minHandPresenceConfidence:
+                            0.65,
+
+                        minTrackingConfidence:
+                            0.65
+
+                    }
+
+                );
+
+
+        status.textContent =
+            "Hand tracking ready";
+
+
+    } catch (err) {
+
+        console.error(
+            "MediaPipe error:",
+            err
         );
 
-
-    handLandmarker =
-        await HandLandmarker.createFromOptions(
-
-            vision,
-
-            {
-
-                baseOptions: {
-
-                    modelAssetPath:
-                        "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
-
-                    delegate:
-                        "GPU"
-
-                },
-
-                runningMode:
-                    "VIDEO",
-
-                numHands:
-                    2,
-
-                minHandDetectionConfidence:
-                    0.7,
-
-                minHandPresenceConfidence:
-                    0.7,
-
-                minTrackingConfidence:
-                    0.7
-
-            }
-
-        );
+    }
 
 }
 
 
 /* =========================================================
-   MAIN RENDER LOOP
+   RENDER LOOP
 ========================================================= */
 
-function renderLoop(timestamp) {
+function render(time) {
 
     if (!running)
         return;
@@ -559,110 +574,84 @@ function renderLoop(timestamp) {
 
     /*
         Draw camera.
+
+        Because the video itself is
+        mirrored with CSS, we don't
+        need to flip the processing
+        image here.
     */
 
-    frameCtx.save();
+    ctx.save();
 
-    /*
-        Mirror camera.
-    */
 
-    frameCtx.translate(
-        PROCESS_WIDTH,
+    ctx.translate(
+        WIDTH,
         0
     );
 
-    frameCtx.scale(
+
+    ctx.scale(
         -1,
         1
     );
 
-    frameCtx.drawImage(
+
+    ctx.drawImage(
 
         video,
 
         0,
         0,
 
-        PROCESS_WIDTH,
-        PROCESS_HEIGHT
+        WIDTH,
+        HEIGHT
 
     );
 
-    frameCtx.restore();
+
+    ctx.restore();
 
 
     /*
-        Copy processing frame
-        to visible canvas.
-    */
+        Hand detection only every
+        ~100ms = around 10 FPS.
 
-    ctx.drawImage(
-        frameCanvas,
-        0,
-        0
-    );
-
-
-    /*
-        Hand detection is throttled.
-
-        This is the BIG CPU optimization.
+        This saves a LOT of CPU.
     */
 
     if (
 
         handLandmarker &&
 
-        !handDetectionBusy &&
+        !detecting &&
 
-        timestamp -
-        lastHandDetection >
-        HAND_INTERVAL
+        time -
+        lastDetection >
+        100
 
     ) {
 
-        detectHands(timestamp);
+        detectHands(time);
 
     }
 
 
     /*
-        Draw effects.
+        Draw portal.
     */
 
-    drawPortals();
+    drawPortal();
 
+
+    /*
+        HUD.
+    */
 
     drawHUD();
 
 
-    /*
-        FPS.
-    */
-
-    frameCounter++;
-
-    if (
-        timestamp -
-        lastFrameTime >
-        1000
-    ) {
-
-        fps =
-            frameCounter;
-
-        frameCounter =
-            0;
-
-        lastFrameTime =
-            timestamp;
-
-    }
-
-
     requestAnimationFrame(
-        renderLoop
+        render
     );
 
 }
@@ -672,46 +661,42 @@ function renderLoop(timestamp) {
    HAND DETECTION
 ========================================================= */
 
-async function detectHands(timestamp) {
+async function detectHands(time) {
 
-    handDetectionBusy =
-        true;
+    detecting = true;
 
-    lastHandDetection =
-        timestamp;
+    lastDetection =
+        time;
 
 
     try {
 
         const result =
-            handLandmarker.detectForVideo(
+            handLandmarker
+                .detectForVideo(
 
-                video,
+                    video,
 
-                timestamp
+                    time
 
-            );
+                );
 
 
-        detectedHands =
+        hands =
             result.landmarks || [];
 
 
         processGestures();
 
 
-    } catch (error) {
+    } catch (err) {
 
-        console.warn(
-            "Hand tracking:",
-            error
-        );
+        console.warn(err);
 
     }
 
 
-    handDetectionBusy =
-        false;
+    detecting = false;
 
 }
 
@@ -725,40 +710,42 @@ function processGestures() {
     const now =
         performance.now();
 
-    let fists =
-        0;
+
+    let fists = 0;
 
 
     for (
-        const hand of detectedHands
+        const hand
+        of hands
     ) {
 
         /*
-            Thumb/index pinch.
+            Thumb + index pinch.
         */
-
-        const pinch =
-            landmarkDistance(
-                hand[4],
-                hand[8]
-            );
-
 
         if (
 
-            pinch <
-            PINCH_THRESHOLD &&
-
-            now -
-            lastFilterChange >
-            FILTER_COOLDOWN
+            distance(
+                hand[4],
+                hand[8]
+            ) < 0.075
 
         ) {
 
-            nextFilter();
+            if (
 
-            lastFilterChange =
-                now;
+                now -
+                lastFilterChange >
+                400
+
+            ) {
+
+                nextFilter(1);
+
+                lastFilterChange =
+                    now;
+
+            }
 
         }
 
@@ -779,7 +766,8 @@ function processGestures() {
 
 
     /*
-        Two fists toggle mode.
+        Two fists =
+        switch 2D / 3D
     */
 
     if (
@@ -788,7 +776,7 @@ function processGestures() {
 
         now -
         lastModeChange >
-        MODE_COOLDOWN
+        1200
 
     ) {
 
@@ -804,10 +792,10 @@ function processGestures() {
 
 
 /* =========================================================
-   LANDMARK DISTANCE
+   DISTANCE
 ========================================================= */
 
-function landmarkDistance(a, b) {
+function distance(a, b) {
 
     const dx =
         a.x -
@@ -816,6 +804,7 @@ function landmarkDistance(a, b) {
     const dy =
         a.y -
         b.y;
+
 
     return Math.sqrt(
         dx * dx +
@@ -826,13 +815,14 @@ function landmarkDistance(a, b) {
 
 
 /* =========================================================
-   FIST DETECTION
+   FIST
 ========================================================= */
 
 function isFist(hand) {
 
     const wrist =
         hand[0];
+
 
     const tips = [
 
@@ -844,16 +834,16 @@ function isFist(hand) {
     ];
 
 
-    let total =
-        0;
+    let total = 0;
 
 
     for (
-        const tip of tips
+        const tip
+        of tips
     ) {
 
         total +=
-            landmarkDistance(
+            distance(
                 wrist,
                 tip
             );
@@ -862,147 +852,84 @@ function isFist(hand) {
 
 
     return (
+
         total /
         tips.length
-    ) <
-    FIST_THRESHOLD;
+
+    ) < 0.135;
 
 }
 
 
 /* =========================================================
-   POINT CONVERSION
+   LANDMARKS
 ========================================================= */
 
-function handPoints(hand) {
-
-    const ids = [
-        4,
-        8,
-        12,
-        16,
-        20
-    ];
-
-
-    return ids.map(
-
-        id => ({
-
-            x:
-                hand[id].x *
-                PROCESS_WIDTH,
-
-            y:
-                hand[id].y *
-                PROCESS_HEIGHT
-
-        })
-
-    );
-
-}
-
-
-/* =========================================================
-   QUAD SORT
-========================================================= */
-
-function sortQuad(points) {
-
-    const sorted =
-        [...points].sort(
-            (a, b) =>
-                a.x - b.x
-        );
-
-
-    const left =
-        sorted
-            .slice(0, 2)
-            .sort(
-                (a, b) =>
-                    a.y - b.y
-            );
-
-
-    const right =
-        sorted
-            .slice(2)
-            .sort(
-                (a, b) =>
-                    a.y - b.y
-            );
-
+function points(hand) {
 
     return [
 
-        left[0],
-        right[0],
-        right[1],
-        left[1]
+        point(hand[4]),
+
+        point(hand[8]),
+
+        point(hand[12]),
+
+        point(hand[16]),
+
+        point(hand[20])
 
     ];
 
 }
 
 
-/* =========================================================
-   ROTATION CHECK
-========================================================= */
+function point(p) {
 
-function rotated(
-    thumb,
-    index
-) {
+    return {
 
-    const dx =
-        index.x -
-        thumb.x;
+        x:
+            p.x * WIDTH,
 
-    const dy =
-        index.y -
-        thumb.y;
+        y:
+            p.y * HEIGHT
 
-
-    return (
-
-        dy >
-        PROCESS_HEIGHT * 0.045 ||
-
-        Math.abs(dx) >
-        Math.abs(dy) * 1.1
-
-    );
+    };
 
 }
 
 
 /* =========================================================
-   PORTAL DRAWING
+   PORTAL
 ========================================================= */
 
-function drawPortals() {
+function drawPortal() {
 
     if (
-        detectedHands.length === 0
+        hands.length === 0
     )
         return;
 
 
-    const hands =
-        detectedHands.map(
-            handPoints
+    const handPoints =
+        hands.map(
+            points
         );
 
 
-    if (mode3D) {
+    if (
+        mode3D
+    ) {
 
-        draw3DPortal(hands);
+        draw3D(
+            handPoints
+        );
 
     } else {
 
-        draw2DPortal(hands);
+        draw2D(
+            handPoints
+        );
 
     }
 
@@ -1010,108 +937,43 @@ function drawPortals() {
 
 
 /* =========================================================
-   2D PORTAL
+   2D
 ========================================================= */
 
-function draw2DPortal(hands) {
+function draw2D(h) {
 
     if (
-        hands.length === 2
+        h.length === 2
     ) {
 
-        const corners = [
+        const quad = [
 
-            hands[0][0],
-            hands[0][1],
-            hands[1][0],
-            hands[1][1]
+            h[0][0],
+            h[0][1],
+            h[1][0],
+            h[1][1]
 
         ];
 
 
-        let quad;
-
-
-        if (
-
-            rotated(
-                hands[0][0],
-                hands[0][1]
-            ) ||
-
-            rotated(
-                hands[1][0],
-                hands[1][1]
-            )
-
-        ) {
-
-            /*
-                Bowtie mode.
-            */
-
-            const sorted =
-                [...corners].sort(
-                    (a, b) =>
-                        a.x - b.x
-                );
-
-
-            const left =
-                sorted
-                    .slice(0, 2)
-                    .sort(
-                        (a, b) =>
-                            a.y - b.y
-                    );
-
-
-            const right =
-                sorted
-                    .slice(2)
-                    .sort(
-                        (a, b) =>
-                            a.y - b.y
-                    );
-
-
-            quad = [
-
-                left[0],
-                right[1],
-                right[0],
-                left[1]
-
-            ];
-
-        } else {
-
-            quad =
-                sortQuad(
-                    corners
-                );
-
-        }
-
-
-        drawFilteredPortal(
+        drawFiltered(
             quad,
             currentFilter()
         );
 
 
     } else if (
-        hands.length === 1
+        h.length === 1
     ) {
 
-        drawFilteredPortal(
+        drawFiltered(
 
             [
 
-                hands[0][0],
-                hands[0][1],
-                hands[0][2],
-                hands[0][4]
+                h[0][0],
+                h[0][1],
+                h[0][2],
+                h[0][4]
 
             ],
 
@@ -1125,32 +987,25 @@ function draw2DPortal(hands) {
 
 
 /* =========================================================
-   3D PORTAL
+   3D
 ========================================================= */
 
-function draw3DPortal(hands) {
+function draw3D(h) {
 
     if (
-        hands.length === 2
+        h.length === 2
     ) {
 
-        const a =
-            hands[0];
-
-        const b =
-            hands[1];
-
-
-        drawFilteredPortal(
+        drawFiltered(
 
             [
 
-                a[0],
-                a[1],
-                a[2],
-                b[2],
-                b[1],
-                b[0]
+                h[0][0],
+                h[0][1],
+                h[0][2],
+                h[1][2],
+                h[1][1],
+                h[1][0]
 
             ],
 
@@ -1159,45 +1014,34 @@ function draw3DPortal(hands) {
         );
 
 
-        drawFilteredPortal(
+        drawFiltered(
 
             [
 
-                a[2],
-                a[3],
-                a[4],
-                b[4],
-                b[3],
-                b[2]
+                h[0][2],
+                h[0][3],
+                h[0][4],
+                h[1][4],
+                h[1][3],
+                h[1][2]
 
             ],
 
             filters[
-                (activeFilter + 1) %
+                (
+                    filterIndex +
+                    1
+                )
+                %
                 filters.length
             ]
 
         );
 
 
-    } else if (
-        hands.length === 1
-    ) {
+    } else {
 
-        drawFilteredPortal(
-
-            [
-
-                hands[0][0],
-                hands[0][1],
-                hands[0][2],
-                hands[0][4]
-
-            ],
-
-            currentFilter()
-
-        );
+        draw2D(h);
 
     }
 
@@ -1208,26 +1052,29 @@ function draw3DPortal(hands) {
    FILTERED PORTAL
 ========================================================= */
 
-function drawFilteredPortal(
-    points,
+function drawFiltered(
+    polygon,
     filter
 ) {
 
     if (
-        points.length < 4
+        polygon.length < 4
     )
         return;
 
 
     /*
-        Find bounding box.
+        Bounding box.
+
+        Only this small region
+        gets filtered.
     */
 
     let minX =
-        PROCESS_WIDTH;
+        WIDTH;
 
     let minY =
-        PROCESS_HEIGHT;
+        HEIGHT;
 
     let maxX =
         0;
@@ -1237,7 +1084,8 @@ function drawFilteredPortal(
 
 
     for (
-        const p of points
+        const p
+        of polygon
     ) {
 
         minX =
@@ -1281,123 +1129,56 @@ function drawFilteredPortal(
 
     maxX =
         Math.min(
-            PROCESS_WIDTH,
+            WIDTH,
             Math.ceil(maxX)
         );
 
     maxY =
         Math.min(
-            PROCESS_HEIGHT,
+            HEIGHT,
             Math.ceil(maxY)
         );
 
 
-    const width =
+    const w =
         maxX -
         minX;
 
-    const height =
+    const h =
         maxY -
         minY;
 
 
     if (
-        width < 10 ||
-        height < 10
+        w < 10 ||
+        h < 10
     )
         return;
 
 
     /*
-        Resize temporary canvas
-        ONLY to portal size.
-    */
-
-    if (
-
-        portalCanvas.width !== width ||
-        portalCanvas.height !== height
-
-    ) {
-
-        portalCanvas.width =
-            width;
-
-        portalCanvas.height =
-            height;
-
-    }
-
-
-    portalCtx.clearRect(
-        0,
-        0,
-        width,
-        height
-    );
-
-
-    /*
-        Draw only the portal region.
-    */
-
-    portalCtx.drawImage(
-
-        frameCanvas,
-
-        minX,
-        minY,
-        width,
-        height,
-
-        0,
-        0,
-        width,
-        height
-
-    );
-
-
-    /*
-        Apply lightweight browser filter.
-    */
-
-    applyFastFilter(
-        portalCtx,
-        width,
-        height,
-        filter
-    );
-
-
-    /*
-        Clip to hand polygon.
+        Clip polygon.
     */
 
     ctx.save();
 
     ctx.beginPath();
 
-
     ctx.moveTo(
-
-        points[0].x,
-        points[0].y
-
+        polygon[0].x,
+        polygon[0].y
     );
 
 
     for (
         let i = 1;
-        i < points.length;
+        i < polygon.length;
         i++
     ) {
 
         ctx.lineTo(
-
-            points[i].x,
-            points[i].y
-
+            polygon[i].x,
+            polygon[i].y
         );
 
     }
@@ -1408,12 +1189,108 @@ function drawFilteredPortal(
     ctx.clip();
 
 
+    /*
+        Lightweight browser filters.
+
+        These are MUCH cheaper than
+        manipulating every pixel with JS.
+    */
+
+    ctx.save();
+
+
+    switch (filter) {
+
+        case "invert":
+
+            ctx.filter =
+                "invert(1)";
+
+            break;
+
+
+        case "thermal":
+
+            ctx.filter =
+                "contrast(1.4) saturate(3) hue-rotate(180deg)";
+
+            break;
+
+
+        case "sketch":
+
+            ctx.filter =
+                "grayscale(1) contrast(2)";
+
+            break;
+
+
+        case "blur":
+
+            ctx.filter =
+                "blur(8px)";
+
+            break;
+
+
+        case "red-channel":
+
+            ctx.filter =
+                "grayscale(1) sepia(1) saturate(5)";
+
+            break;
+
+
+        case "cartoon":
+
+            ctx.filter =
+                "contrast(1.4) saturate(1.5)";
+
+            break;
+
+
+        case "dual-tone":
+
+            ctx.filter =
+                "contrast(1.5) saturate(1.7)";
+
+            break;
+
+
+        case "edge":
+
+            ctx.filter =
+                "grayscale(1) contrast(3)";
+
+            break;
+
+
+        default:
+
+            ctx.filter =
+                "none";
+
+    }
+
+
+    /*
+        Draw the camera region again
+        with the filter applied.
+
+        IMPORTANT:
+        The clipping means ONLY the
+        portal gets the effect.
+    */
+
     ctx.drawImage(
 
-        portalCanvas,
+        video,
 
-        minX,
-        minY
+        0,
+        0,
+
+        WIDTH,
+        HEIGHT
 
     );
 
@@ -1422,28 +1299,102 @@ function drawFilteredPortal(
 
 
     /*
-        Portal border.
+        Rainbow overlay.
     */
 
-    ctx.save();
+    if (
+        filter ===
+        "rainbow-wave"
+    ) {
+
+        const gradient =
+            ctx.createLinearGradient(
+
+                minX,
+                minY,
+
+                maxX,
+                maxY
+
+            );
+
+
+        const t =
+            (
+                performance.now() /
+                10
+            ) % 360;
+
+
+        gradient.addColorStop(
+
+            0,
+
+            `hsla(${t},100%,50%,0.5)`
+
+        );
+
+
+        gradient.addColorStop(
+
+            0.5,
+
+            `hsla(${(t + 120) % 360},100%,50%,0.5)`
+
+        );
+
+
+        gradient.addColorStop(
+
+            1,
+
+            `hsla(${(t + 240) % 360},100%,50%,0.5)`
+
+        );
+
+
+        ctx.fillStyle =
+            gradient;
+
+
+        ctx.fillRect(
+
+            minX,
+            minY,
+
+            w,
+            h
+
+        );
+
+    }
+
+
+    /*
+        Border.
+    */
+
+    ctx.filter =
+        "none";
+
 
     ctx.beginPath();
 
     ctx.moveTo(
-        points[0].x,
-        points[0].y
+        polygon[0].x,
+        polygon[0].y
     );
 
 
     for (
         let i = 1;
-        i < points.length;
+        i < polygon.length;
         i++
     ) {
 
         ctx.lineTo(
-            points[i].x,
-            points[i].y
+            polygon[i].x,
+            polygon[i].y
         );
 
     }
@@ -1453,455 +1404,15 @@ function drawFilteredPortal(
 
 
     ctx.strokeStyle =
-        "rgba(255,255,255,0.95)";
+        "white";
 
     ctx.lineWidth =
         2;
 
     ctx.stroke();
 
+
     ctx.restore();
-
-}
-
-
-/* =========================================================
-   FAST FILTERS
-========================================================= */
-
-function applyFastFilter(
-    context,
-    width,
-    height,
-    filter
-) {
-
-    switch (filter) {
-
-        case "invert":
-
-            context.filter =
-                "invert(1)";
-
-            redraw(context);
-
-            break;
-
-
-        case "blur":
-
-            context.filter =
-                "blur(8px)";
-
-            redraw(context);
-
-            break;
-
-
-        case "thermal":
-
-            context.filter =
-                "contrast(1.4) saturate(3) hue-rotate(180deg)";
-
-            redraw(context);
-
-            break;
-
-
-        case "red-channel":
-
-            context.filter =
-                "grayscale(1) sepia(1) saturate(5) hue-rotate(315deg)";
-
-            redraw(context);
-
-            break;
-
-
-        case "sketch":
-
-            context.filter =
-                "grayscale(1) contrast(2) brightness(1.2)";
-
-            redraw(context);
-
-            break;
-
-
-        case "cartoon":
-
-            context.filter =
-                "contrast(1.35) saturate(1.5)";
-
-            redraw(context);
-
-            break;
-
-
-        case "dual-tone":
-
-            context.filter =
-                "contrast(1.5) saturate(1.7)";
-
-            redraw(context);
-
-            break;
-
-
-        case "pixelate":
-
-            pixelateCanvas(
-                context,
-                width,
-                height
-            );
-
-            break;
-
-
-        case "glitch":
-
-            glitchCanvas(
-                context,
-                width,
-                height
-            );
-
-            break;
-
-
-        case "edge":
-
-            context.filter =
-                "grayscale(1) contrast(3)";
-
-            redraw(context);
-
-            break;
-
-
-        case "rainbow-wave":
-
-            rainbowCanvas(
-                context,
-                width,
-                height
-            );
-
-            break;
-
-
-        default:
-
-            break;
-
-    }
-
-
-    context.filter =
-        "none";
-
-}
-
-
-/* =========================================================
-   REDRAW FILTER
-========================================================= */
-
-function redraw(context) {
-
-    const canvas =
-        context.canvas;
-
-    context.drawImage(
-        canvas,
-        0,
-        0
-    );
-
-}
-
-
-/* =========================================================
-   PIXELATE
-========================================================= */
-
-function pixelateCanvas(
-    context,
-    width,
-    height
-) {
-
-    const source =
-        context.getImageData(
-            0,
-            0,
-            width,
-            height
-        );
-
-
-    const data =
-        source.data;
-
-    const block =
-        10;
-
-
-    for (
-        let y = 0;
-        y < height;
-        y += block
-    ) {
-
-        for (
-            let x = 0;
-            x < width;
-            x += block
-        ) {
-
-            const index =
-                (
-                    y * width +
-                    x
-                ) * 4;
-
-
-            const r =
-                data[index];
-
-            const g =
-                data[index + 1];
-
-            const b =
-                data[index + 2];
-
-
-            for (
-                let yy = y;
-                yy < Math.min(
-                    y + block,
-                    height
-                );
-                yy++
-            ) {
-
-                for (
-                    let xx = x;
-                    xx < Math.min(
-                        x + block,
-                        width
-                    );
-                    xx++
-                ) {
-
-                    const i =
-                        (
-                            yy *
-                            width +
-                            xx
-                        ) * 4;
-
-
-                    data[i] =
-                        r;
-
-                    data[i + 1] =
-                        g;
-
-                    data[i + 2] =
-                        b;
-
-                }
-
-            }
-
-        }
-
-    }
-
-
-    context.putImageData(
-        source,
-        0,
-        0
-    );
-
-}
-
-
-/* =========================================================
-   GLITCH
-========================================================= */
-
-function glitchCanvas(
-    context,
-    width,
-    height
-) {
-
-    const source =
-        context.getImageData(
-            0,
-            0,
-            width,
-            height
-        );
-
-
-    context.clearRect(
-        0,
-        0,
-        width,
-        height
-    );
-
-
-    context.putImageData(
-        source,
-        Math.floor(
-            Math.random() * 10
-        ) - 5,
-        0
-    );
-
-
-    /*
-        RGB-like overlay.
-    */
-
-    context.globalCompositeOperation =
-        "screen";
-
-    context.globalAlpha =
-        0.25;
-
-
-    context.putImageData(
-        source,
-        Math.floor(
-            Math.random() * 10
-        ) - 5,
-        0
-    );
-
-
-    context.globalAlpha =
-        1;
-
-    context.globalCompositeOperation =
-        "source-over";
-
-
-    /*
-        Random scanline.
-    */
-
-    context.fillStyle =
-        "rgba(255,255,255,0.4)";
-
-
-    for (
-        let i = 0;
-        i < 2;
-        i++
-    ) {
-
-        const y =
-            Math.random() *
-            height;
-
-        context.fillRect(
-            0,
-            y,
-            width,
-            1
-        );
-
-    }
-
-}
-
-
-/* =========================================================
-   RAINBOW
-========================================================= */
-
-function rainbowCanvas(
-    context,
-    width,
-    height
-) {
-
-    /*
-        Lightweight overlay instead of
-        recalculating every pixel.
-    */
-
-    const gradient =
-        context.createLinearGradient(
-            0,
-            0,
-            width,
-            height
-        );
-
-
-    const t =
-        (
-            performance.now() *
-            0.0005
-        ) % 1;
-
-
-    gradient.addColorStop(
-        0,
-        `hsla(${t * 360},100%,50%,0.45)`
-    );
-
-
-    gradient.addColorStop(
-        0.25,
-        `hsla(${(t * 360 + 90) % 360},100%,50%,0.45)`
-    );
-
-
-    gradient.addColorStop(
-        0.5,
-        `hsla(${(t * 360 + 180) % 360},100%,50%,0.45)`
-    );
-
-
-    gradient.addColorStop(
-        0.75,
-        `hsla(${(t * 360 + 270) % 360},100%,50%,0.45)`
-    );
-
-
-    gradient.addColorStop(
-        1,
-        `hsla(${(t * 360 + 360) % 360},100%,50%,0.45)`
-    );
-
-
-    context.fillStyle =
-        gradient;
-
-
-    context.globalCompositeOperation =
-        "screen";
-
-
-    context.fillRect(
-        0,
-        0,
-        width,
-        height
-    );
-
-
-    context.globalCompositeOperation =
-        "source-over";
 
 }
 
@@ -1914,22 +1425,22 @@ function drawHUD() {
 
     ctx.save();
 
+
     ctx.font =
         "bold 14px Arial";
+
 
     ctx.fillStyle =
         "#00ffff";
 
 
-    let mode =
-        mode3D
-            ? "3D Mesh"
-            : "2D Quad";
-
-
     ctx.fillText(
 
-        `MODE: ${mode} [C / Dual Fist]`,
+        `MODE: ${
+            mode3D
+                ? "3D Mesh"
+                : "2D Quad"
+        } [C / Dual Fist]`,
 
         12,
         22
@@ -1943,54 +1454,15 @@ function drawHUD() {
 
     ctx.fillText(
 
-        `FILTER: ${currentFilter().toUpperCase()} [Pinch / N / P]`,
+        `FILTER: ${
+            currentFilter()
+                .toUpperCase()
+        } [Pinch / N / P]`,
 
         12,
         44
 
     );
-
-
-    ctx.fillStyle =
-        "#aaa";
-
-
-    ctx.font =
-        "12px Arial";
-
-
-    ctx.fillText(
-
-        `FPS: ${fps}   Q: Quit   C: Mode   N/P: Filter   S: Screenshot`,
-
-        12,
-        PROCESS_HEIGHT - 12
-
-    );
-
-
-    /*
-        Hand tracking indicator.
-    */
-
-    if (
-        handLandmarker
-    ) {
-
-        ctx.fillStyle =
-            "#00ff88";
-
-
-        ctx.fillText(
-
-            "HAND TRACKING: READY",
-
-            PROCESS_WIDTH - 170,
-            22
-
-        );
-
-    }
 
 
     ctx.restore();
@@ -2011,54 +1483,63 @@ document.addEventListener(
 
 
         if (
-            key === "q"
-        ) {
-
-            stopCamera();
-
-
-        } else if (
-            key === "c"
-        ) {
-
-            const now =
-                performance.now();
-
-
-            if (
-                now -
-                lastModeChange >
-                300
-            ) {
-
-                mode3D =
-                    !mode3D;
-
-                lastModeChange =
-                    now;
-
-            }
-
-
-        } else if (
             key === "n"
         ) {
 
             nextFilter(1);
 
+        }
 
-        } else if (
+
+        if (
             key === "p"
         ) {
 
             nextFilter(-1);
 
+        }
 
-        } else if (
+
+        if (
+            key === "c"
+        ) {
+
+            mode3D =
+                !mode3D;
+
+        }
+
+
+        if (
             key === "s"
         ) {
 
-            takeScreenshot();
+            const link =
+                document.createElement(
+                    "a"
+                );
+
+
+            link.download =
+                "retrolens.png";
+
+
+            link.href =
+                canvas.toDataURL(
+                    "image/png"
+                );
+
+
+            link.click();
+
+        }
+
+
+        if (
+            key === "q"
+        ) {
+
+            stopCamera();
 
         }
 
@@ -2067,32 +1548,7 @@ document.addEventListener(
 
 
 /* =========================================================
-   SCREENSHOT
-========================================================= */
-
-function takeScreenshot() {
-
-    const link =
-        document.createElement("a");
-
-
-    link.download =
-        `retrolens_${Date.now()}.png`;
-
-
-    link.href =
-        canvas.toDataURL(
-            "image/png"
-        );
-
-
-    link.click();
-
-}
-
-
-/* =========================================================
-   STOP CAMERA
+   STOP
 ========================================================= */
 
 function stopCamera() {
@@ -2102,22 +1558,20 @@ function stopCamera() {
 
 
     if (
-        cameraStream
+        stream
     ) {
 
-        for (
-            const track
-            of cameraStream.getTracks()
-        ) {
-
-            track.stop();
-
-        }
+        stream
+            .getTracks()
+            .forEach(
+                track =>
+                    track.stop()
+            );
 
     }
 
 
-    cameraStream =
+    stream =
         null;
 
 
@@ -2129,19 +1583,22 @@ function stopCamera() {
         false;
 
 
-    statusText.textContent =
+    status.textContent =
         "Camera offline";
 
 }
 
 
 /* =========================================================
-   START
+   BUTTON
 ========================================================= */
 
 startButton.addEventListener(
+
     "click",
+
     startCamera
+
 );
 
 </script>
